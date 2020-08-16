@@ -9,11 +9,8 @@ doHeader title styles = placeAround (doTitle title ++ doStyles styles) "<head>"
 doBody :: [String] -> [String]
 doBody xs = placeAround xs "<body>"
 
-doNewLine :: [String] -> [String]
-doNewLine xs = [x ++ "\n" | x <- xs]
-
 placeAround :: [String] -> String -> [String]
-placeAround xs x = [x] ++ doIndent xs ++ [doEndTag x]
+placeAround xs x = [x] ++ ["\t" ++ x | x <- xs] ++ [doEndTag x]
 
 generateStyles :: String -> String
 generateStyles ":dark" = "<style>* {background-color: black; color: white;}</style>"
@@ -26,9 +23,6 @@ doStyles xs = [generateStyles x | x <- xs]
 
 doHtmlFormat :: [String] -> [String] -> [String] -> [String]
 doHtmlFormat title xs styles = ["<!DOCTYPE html>"] ++ placeAround (doHeader title styles ++ doBody xs) "<html>" 
-
-doIndent :: [String] -> [String]
-doIndent xs = ["\t" ++ x | x <- xs]
 
 doEndTag :: String -> String
 doEndTag x = [head x] ++ "/" ++ tail x
@@ -79,10 +73,7 @@ main = do
          -- doStyles
             -- generateStyles
          -- placeAround
-            -- doIndent
       -- doBody
          -- placeAround
-            -- doIndent
       -- placeAround
-            -- doIndent
    -- doNewLine
