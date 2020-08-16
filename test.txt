@@ -1,0 +1,11 @@
+# This is a header
+## This is a header 2
+### This is a header three
+p This is a paragraph
+ 
+p The above line is a break
+** This is a bold tag
+* This is an italic tag
+~ This is a strikethrough
+` This is a quote
+``` This is a blockquote
