@@ -10,10 +10,7 @@ import System.Environment
          -- doStyles
             -- generateStyles
          -- placeAround
-      -- doBody
-         -- placeAround
       -- placeAround
-   -- doNewLine
 
 main :: IO ()
 main = do
@@ -25,7 +22,7 @@ main = do
       writeFile (filePath ++ ".html") $ concat $ doChain [filePath] lof (tail args)
 
 doChain :: [String] -> [String] -> [String] -> [String]
-doChain title xs styles = doNewLine $ doHtmlFormat title [doTaggedLine x | x <- xs] styles
+doChain title xs styles = [x ++ "\n" | x <- doHtmlFormat title [doTaggedLine x | x <- xs] styles]
 
 doTaggedLine :: String -> String
 doTaggedLine line = begtag ++ trim ++ endtag where
@@ -62,7 +59,7 @@ doEndTag :: String -> String
 doEndTag x = [head x] ++ "/" ++ tail x
 
 doHtmlFormat :: [String] -> [String] -> [String] -> [String]
-doHtmlFormat title xs styles = ["<!DOCTYPE html>"] ++ placeAround (doHeader title styles ++ doBody xs) "<html>"
+doHtmlFormat title xs styles = ["<!DOCTYPE html>"] ++ placeAround (doHeader title styles ++ placeAround xs "<body>") "<html>"
 
 doHeader :: [String] -> [String] -> [String]
 doHeader title styles = placeAround (doTitle title ++ doStyles styles) "<head>"
@@ -83,6 +80,3 @@ generateStyles x = "<link rel=\"stylesheet\" href=\"" ++ x ++ "\">"
 placeAround :: [String] -> String -> [String]
 -- Sorround an indented "block" with a tag and the end tag of that tag
 placeAround xs x = [x] ++ ["\t" ++ x | x <- xs] ++ [doEndTag x]
-
-doBody :: [String] -> [String]
-doBody xs = placeAround xs "<body>"
