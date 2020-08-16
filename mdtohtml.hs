@@ -1,31 +1,44 @@
 import System.Environment
 
-doTitle :: [String] -> [String]
-doTitle title = [concat $ ["<title>"] ++ title ++ ["</title>"]]
+-- doChain
+   -- doTaggedLine
+      -- switchTag
+      -- doEndTag
+   -- doHtmlFormat
+      -- doHeader
+         -- doTitle
+         -- doStyles
+            -- generateStyles
+         -- placeAround
+      -- doBody
+         -- placeAround
+      -- placeAround
+   -- doNewLine
 
-doHeader :: [String] -> [String] -> [String]
-doHeader title styles = placeAround (doTitle title ++ doStyles styles) "<head>" 
+main :: IO ()
+main = do
+  args <- getArgs
+  let filePath = head args in do
+    content <- readFile (head args)
+    -- "lof" means lines of file
+    let lof = lines content in
+      writeFile (filePath ++ ".html") $ concat $ doChain [filePath] lof (tail args)
 
-doBody :: [String] -> [String]
-doBody xs = placeAround xs "<body>"
+doChain :: [String] -> [String] -> [String] -> [String]
+doChain title xs styles = doNewLine $ doHtmlFormat title [doTaggedLine x | x <- xs] styles
 
-placeAround :: [String] -> String -> [String]
-placeAround xs x = [x] ++ ["\t" ++ x | x <- xs] ++ [doEndTag x]
-
-generateStyles :: String -> String
-generateStyles ":dark" = "<style>* {background-color: black; color: white;}</style>"
-generateStyles ":light" = "<style>* {background-color: white; color: black;}</style>"
-generateStyles ":mono" = "<style>* {font-family: monospace;}</style>"
-generateStyles x = "<link rel=\"stylesheet\" href=\"" ++ x ++ "\">"
-
-doStyles :: [String] -> [String]
-doStyles xs = [generateStyles x | x <- xs]
-
-doHtmlFormat :: [String] -> [String] -> [String] -> [String]
-doHtmlFormat title xs styles = ["<!DOCTYPE html>"] ++ placeAround (doHeader title styles ++ doBody xs) "<html>" 
-
-doEndTag :: String -> String
-doEndTag x = [head x] ++ "/" ++ tail x
+doTaggedLine :: String -> String
+doTaggedLine line = begtag ++ trim ++ endtag where
+  -- Break the string into tokens by ' '
+  xs = words line
+  -- Get the first token ('#' in "# Example") and create a tag out of it
+  begtag = switchTag $ if null xs then "" else head xs
+  -- Generate an end tag, if the tag requires one
+  endtag = if begtag == "<br>" then "" else doEndTag begtag
+  -- If the line has content (e.g. not a break) reassemble the tokens
+  conts = if begtag == "<br>" then "" else concat [x ++ " " | x <- tail xs]
+  -- If the line has content, trim the trailing whitespace
+  trim = if null conts then "" else init conts
 
 switchTag :: String -> String
 switchTag "p" = "<p>"
@@ -44,36 +57,32 @@ switchTag "br" = "<br>"
 switchTag "" = "<br>"
 switchTag xs = xs
 
-doTag :: String -> String
-doTag s = begtag ++ trim ++ endtag where
-  xs = words s
-  begtag = switchTag $ if null xs then "" else head xs
-  endtag = if begtag == "<br>" then "" else doEndTag begtag
-  conts = if begtag == "<br>" then "" else concat [x ++ " " | x <- tail xs]
-  trim = if null conts then "" else init conts
+doEndTag :: String -> String
+-- Create an end tag by inserting a '/' after the first character
+doEndTag x = [head x] ++ "/" ++ tail x
 
-doChain :: [String] -> [String] -> [String] -> [String]
-doChain title ls styles = doNewLine $ doHtmlFormat title [doTag l | l <- ls] styles
+doHtmlFormat :: [String] -> [String] -> [String] -> [String]
+doHtmlFormat title xs styles = ["<!DOCTYPE html>"] ++ placeAround (doHeader title styles ++ doBody xs) "<html>"
 
-main :: IO ()
-main = do
-  args <- getArgs
-  let filePath = head args in do 
-    content <- readFile (head args)
-    let linesOfFile = lines content in do
-      writeFile (filePath ++ ".html") $ concat $ doChain [filePath] linesOfFile (tail args) 
+doHeader :: [String] -> [String] -> [String]
+doHeader title styles = placeAround (doTitle title ++ doStyles styles) "<head>"
 
--- doChain
-   -- doTag
-      -- switchTag
-      -- doEndTag
-   -- doHtmlFormat
-      -- doHeader
-         -- doTitle
-         -- doStyles
-            -- generateStyles
-         -- placeAround
-      -- doBody
-         -- placeAround
-      -- placeAround
-   -- doNewLine
+doTitle :: [String] -> [String]
+doTitle title = [concat $ ["<title>"] ++ title ++ ["</title>"]]
+
+doStyles :: [String] -> [String]
+doStyles xs = [generateStyles x | x <- xs]
+
+generateStyles :: String -> String
+-- Add your own style macros here!
+generateStyles ":dark" = "<style>* {background-color: black; color: white;}</style>"
+generateStyles ":light" = "<style>* {background-color: white; color: black;}</style>"
+generateStyles ":mono" = "<style>* {font-family: monospace;}</style>"
+generateStyles x = "<link rel=\"stylesheet\" href=\"" ++ x ++ "\">"
+
+placeAround :: [String] -> String -> [String]
+-- Sorround an indented "block" with a tag and the end tag of that tag
+placeAround xs x = [x] ++ ["\t" ++ x | x <- xs] ++ [doEndTag x]
+
+doBody :: [String] -> [String]
+doBody xs = placeAround xs "<body>"
