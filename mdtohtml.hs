@@ -72,9 +72,19 @@ doStyles xs = [generateStyles x | x <- xs]
 
 generateStyles :: String -> String
 -- Add your own style macros here!
+-- Color schemes: dark and light
 generateStyles ":dark" = "<style>* {background-color: black; color: white;}</style>"
 generateStyles ":light" = "<style>* {background-color: white; color: black;}</style>"
+-- Text alignment: justify, left, center, and right
+generateStyles ":justify-text" = "<style>* {text-align: justify;}</style>"
+generateStyles ":left-text" = "<style>* {text-align: left;}</style>"
+generateStyles ":center-text" = "<style>* {text-align: center;}</style>"
+generateStyles ":right-text" = "<style>* {text-align: right;}</style>"
+-- Fonts: serif, sans-serif, and mono (NO FANTASY)
+generateStyles ":serif" = "<style>* {font-family: serif;}</style>"
+generateStyles ":sans-serif" = "<style>* {font-family: sans-serif;}</style>"
 generateStyles ":mono" = "<style>* {font-family: monospace;}</style>"
+-- Any unrecognized macros are assumed to be the names of styling files
 generateStyles x = "<link rel=\"stylesheet\" href=\"" ++ x ++ "\">"
 
 placeAround :: [String] -> String -> [String]
